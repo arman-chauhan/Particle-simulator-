@@ -20,6 +20,9 @@ class Vector2:
             return Vector2(self.x * scalar, self.y * scalar)
         return NotImplemented
 
+    def __rmul__(self, scalar):
+        return self.__mul__(scalar)
+
     def __truediv__(self, scalar):
         if isinstance(scalar, (int, float)):
             return Vector2(self.x / scalar, self.y / scalar)

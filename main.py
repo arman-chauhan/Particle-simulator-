@@ -1,10 +1,9 @@
 from time import time
-
+from vector2 import Vector2
 import pygame as pg
 
 from render import Renderer
 from solver import Solver
-from vector2 import Vector2
 
 pg.init()
 
@@ -20,7 +19,7 @@ font = pg.font.Font(None, 36)
 dt = 1 / 60
 radius = 8
 running = True
-
+particleCount = 0
 lastClickTime = 0
 debounceTime = 0.2
 
@@ -37,26 +36,31 @@ while running:
         if event.type == pg.QUIT:
             running = False
 
+    keys = pg.key.get_pressed()
     if pg.mouse.get_pressed()[0]:
         pos = Vector2(*pg.mouse.get_pos())
         dist = (pos - constraintCenter).length()
         if dist < constraintRadius - radius:
             if currentTime - lastClickTime > debounceTime:
+                particleCount += 1
                 lastClickTime = currentTime
-                solver.addParticle(pos, radius)
+                if keys[pg.K_f]:
+                    solver.addFixedParticle(pos, radius)
+                else:
+                    solver.addParticle(pos, radius)
 
-    keys = pg.key.get_pressed()
     if keys[pg.K_a]:
         pos = Vector2(*pg.mouse.get_pos())
         solver.applyAttraction(pos)
 
     fps = clock.get_fps()
-    fps_text = f"FPS: {fps:.2f}"
+    fps_text = f"FPS: {fps:.2f} Count: {particleCount:2}"
     text_surface = font.render(fps_text, True, fpsColor)
 
-    solver.update(dt)
+    solver.updateLink(dt)
     screen.fill("GRAY")
     screen.blit(text_surface, (10, 10))
+    print(f"{fps} --- {particleCount}")
     renderer.render(solver)
 
     clock.tick(60)

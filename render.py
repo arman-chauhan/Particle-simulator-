@@ -1,4 +1,5 @@
 import pygame
+from solver import Solver
 
 
 class Renderer:
@@ -9,9 +10,10 @@ class Renderer:
         self.renderConstraint()
         self.renderParticles(solver)
 
-    def renderParticles(self, solver):
+    def renderParticles(self, solver: Solver):
         # Render particles
-        for particle in solver.particles:
+        allParticles = solver.particles + solver.fixedParticles
+        for particle in allParticles:
             pos = (particle.position.x, particle.position.y)
             radius = particle.radius
             color = "WHITE"

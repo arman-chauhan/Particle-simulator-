@@ -1,4 +1,5 @@
 from vector2 import Vector2
+import numpy as np
 
 
 class Particle:
@@ -6,11 +7,14 @@ class Particle:
         self.radius = radius
         self.position: Vector2 = pos
         self.position_old: Vector2 = pos
-        self.acceleration = Vector2(0, 0)
+        self.acceleration = Vector2()
         self.mass = 1
 
-    def updatePosition(self, dt):
+    def updatePosition(self, dt, damping=0.75):
         velocity = self.position - self.position_old
+        max_vel = 30
+        if velocity.length() > max_vel:
+            velocity = velocity.normalize() * max_vel
         # Store current position
         self.position_old = self.position
         # Perform Verlet integration
