@@ -1,29 +1,33 @@
-from vector2 import Vector2
+from typing import Any
+
 import numpy as np
 
 
 class Particle:
-    def __init__(self, pos: Vector2, radius):
+    def __init__(self, pos: tuple, radius: int):
         self.radius = radius
-        self.position: Vector2 = pos
-        self.position_old: Vector2 = pos
-        self.acceleration = Vector2()
+        self.position = np.array(pos, dtype=np.float64)
+        self.position_old = np.array(pos, dtype=np.float64)
+        self.acceleration = np.zeros(2)
         self.mass = 1
 
-    def updatePosition(self, dt, damping=0.75):
-        velocity = self.position - self.position_old
-        max_vel = 30
-        if velocity.length() > max_vel:
-            velocity = velocity.normalize() * max_vel
+    def updatePosition(self, dt: float, damping=0.75):
+        displacement = self.position - self.position_old
+        speed = np.sqrt(displacement.dot(displacement))
+        max_speed = 30
+
+        if speed > max_speed:
+            displacement = (displacement / speed) * max_speed
+
         # Store current position
         self.position_old = self.position
-        # Perform Verlet integration
-        self.position = self.position + velocity + self.acceleration * dt * dt
+        # Perform Varlet integration
+        self.position = self.position + displacement + self.acceleration * dt * dt
         # Reset acceleration
-        self.acceleration = Vector2(0, 0)
+        self.acceleration = np.zeros(2)
 
-    def accelerate(self, acc):
+    def accelerate(self, acc: np.ndarray[Any, np.dtype]):
         self.acceleration += acc
 
-    def applyForce(self, force: Vector2):
+    def applyForce(self, force):
         self.acceleration += force / self.mass

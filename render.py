@@ -14,15 +14,14 @@ class Renderer:
         # Render particles
         allParticles = solver.particles + solver.fixedParticles
         for particle in allParticles:
-            pos = (particle.position.x, particle.position.y)
+            pos = particle.position[0], particle.position[1]
             radius = particle.radius
             color = "WHITE"
-
             pygame.draw.circle(self.screen, color, pos, radius)
 
     def renderConstraint(self):
         # Render container
         size = self.screen.get_size()
-        center = size[0] * 0.5, size[1] * 0.5
+        center = (size[0] * 0.5, size[1] * 0.5)
 
         pygame.draw.circle(self.screen, "BLACK", center, 400)

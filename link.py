@@ -1,3 +1,5 @@
+import numpy as np
+
 from particle import Particle
 
 
@@ -6,15 +8,16 @@ class Link:
         self.p1: Particle = particle1
         self.p2: Particle = particle2
         self.target_dist = 20
-        self.damping_factor = 0.1  # Lowering this reduces the movement per update
+        self.link_constant = 1  # Lowering this reduces the movement per update
 
-    def apply(self):
+    def apply(self, dt):
         axis = self.p1.position - self.p2.position
-        dist = axis.length()
-        n = axis.normalize()
+        dist = np.sqrt(axis.dot(axis))
+        n = axis / dist
+
         delta = self.target_dist - dist
-        correction = self.damping_factor * delta
+        correction = self.link_constant * delta
 
         # Move each particle by half the correction distance
-        self.p1.position += n * (correction)
-        self.p2.position -= n * (correction)
+        self.p1.position += 0.5 * n * correction
+        self.p2.position -= 0.5 * n * correction

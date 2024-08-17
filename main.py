@@ -1,5 +1,6 @@
 from time import time
-from vector2 import Vector2
+
+import numpy as np
 import pygame as pg
 
 from render import Renderer
@@ -23,11 +24,10 @@ particleCount = 0
 lastClickTime = 0
 debounceTime = 0.2
 
-constraintCenter = Vector2(Size[0] * 0.5, Size[1] * 0.5)
+constraintCenter = (Size[0] * 0.5, Size[1] * 0.5)
 constraintRadius = 400
 
-solver = Solver()
-solver.setConstraint(constraintCenter, constraintRadius)
+solver = Solver(constraintCenter, constraintRadius)
 renderer = Renderer(screen)
 
 while running:
@@ -38,8 +38,9 @@ while running:
 
     keys = pg.key.get_pressed()
     if pg.mouse.get_pressed()[0]:
-        pos = Vector2(*pg.mouse.get_pos())
-        dist = (pos - constraintCenter).length()
+        pos = pg.mouse.get_pos()
+        dist = np.linalg.norm(np.array(pos) - np.array(constraintCenter))
+
         if dist < constraintRadius - radius:
             if currentTime - lastClickTime > debounceTime:
                 particleCount += 1
@@ -50,7 +51,7 @@ while running:
                     solver.addParticle(pos, radius)
 
     if keys[pg.K_a]:
-        pos = Vector2(*pg.mouse.get_pos())
+        pos = pg.mouse.get_pos()
         solver.applyAttraction(pos)
 
     fps = clock.get_fps()

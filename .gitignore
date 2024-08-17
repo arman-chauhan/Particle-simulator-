@@ -1,3 +1,7 @@
 .idea/
 __pycache__/
 .vscode/
+.lprof/
+.DS_Store
+*.pstat
+test.py
