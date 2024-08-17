@@ -2,7 +2,7 @@ import math
 
 
 class Vector2:
-    def __init__(self, x=0.0, y=0.0):
+    def __init__(self, x: float = 0.0, y: float = 0.0):
         self.x: float = x
         self.y: float = y
 
@@ -20,14 +20,19 @@ class Vector2:
             return Vector2(self.x * scalar, self.y * scalar)
         return NotImplemented
 
+    def __truediv__(self, scalar):
+        if isinstance(scalar, (int, float)):
+            return Vector2(self.x / scalar, self.y / scalar)
+        return NotImplemented
+
     def __str__(self):
         return f"x = {self.x} y = {self.y}"
 
-    def len(self):
-        return math.sqrt(self.x ** 2 + self.y ** 2)
+    def length(self):
+        return math.sqrt(self.x**2 + self.y**2)
 
     def normalize(self):
-        len_ = self.len()
+        len_ = self.length()
         if len_ == 0:
             return Vector2(0, 0)
 

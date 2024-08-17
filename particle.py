@@ -2,11 +2,12 @@ from vector2 import Vector2
 
 
 class Particle:
-    def __init__(self, pos, radius):
+    def __init__(self, pos: Vector2, radius):
         self.radius = radius
-        self.position = Vector2(*pos)
-        self.position_old = Vector2(*pos)
+        self.position: Vector2 = pos
+        self.position_old: Vector2 = pos
         self.acceleration = Vector2(0, 0)
+        self.mass = 1
 
     def updatePosition(self, dt):
         velocity = self.position - self.position_old
@@ -19,3 +20,6 @@ class Particle:
 
     def accelerate(self, acc):
         self.acceleration += acc
+
+    def applyForce(self, force: Vector2):
+        self.acceleration += force / self.mass

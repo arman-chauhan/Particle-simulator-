@@ -1,18 +1,17 @@
-import math
 from vector2 import Vector2
 from particle import Particle
 
 
 class Solver:
-
     def __init__(self):
         self.particles: list[Particle] = []
         self.gravity = Vector2(0.0, 1000.0)
+        self.G = 1000
         self.constraintCenter = Vector2()
         self.constraintRadius = 0
 
     def update(self, dt):
-        sub_steps = 20
+        sub_steps = 8
         sub_dt = float(dt / sub_steps)
         for i in range(sub_steps):
             self.applyGravity()
@@ -28,27 +27,40 @@ class Solver:
         for particle in self.particles:
             particle.accelerate(self.gravity)
 
+    def applyAttraction(self, pos: Vector2):
+        for particle in self.particles:
+            force_vector = pos - particle.position
+            distance = force_vector.length()
+            if distance > particle.radius:
+                magnitude = self.G * (particle.mass) / (distance**2 + 200)
+
+                force_direction = force_vector.normalize()
+                force = force_direction * magnitude
+                particle.position += force
+
     def addParticle(self, pos, radius):
         self.particles.append(Particle(pos, radius))
 
-    def setConstraint(self, position, radius):
-        self.constraintCenter = Vector2(*position)
+    def setConstraint(self, position: Vector2, radius: float):
+        self.constraintCenter = position
         self.constraintRadius = radius
 
     def applyConstraint(self):
         for particle in self.particles:
             to_particle = particle.position - self.constraintCenter
-            dist = to_particle.len()
+            dist = to_particle.length()
 
             if dist > self.constraintRadius - particle.radius:
                 normal = to_particle.normalize()  # normalize the vector
-                particle.position = self.constraintCenter + normal * (self.constraintRadius - particle.radius)
+                particle.position = self.constraintCenter + normal * (
+                    self.constraintRadius - particle.radius
+                )
 
     def solveCollisions(self):
         for i, p1 in enumerate(self.particles):
-            for p2 in self.particles[i + 1:]:
+            for p2 in self.particles[i + 1 :]:
                 v = p1.position - p2.position
-                dist = v.len()
+                dist = v.length()
                 min_dist = p1.radius + p2.radius
 
                 if dist < min_dist:

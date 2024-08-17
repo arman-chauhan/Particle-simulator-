@@ -1,7 +1,10 @@
-import pygame as pg
-from solver import Solver
-from render import Renderer
 from time import time
+
+import pygame as pg
+
+from render import Renderer
+from solver import Solver
+from vector2 import Vector2
 
 pg.init()
 
@@ -15,13 +18,13 @@ fpsColor = (162, 177, 219)
 font = pg.font.Font(None, 36)
 
 dt = 1 / 60
-radius = 15
+radius = 8
 running = True
 
 lastClickTime = 0
 debounceTime = 0.2
 
-constraintCenter = Size[0] * 0.5, Size[1] * 0.5
+constraintCenter = Vector2(Size[0] * 0.5, Size[1] * 0.5)
 constraintRadius = 400
 
 solver = Solver()
@@ -35,10 +38,17 @@ while running:
             running = False
 
     if pg.mouse.get_pressed()[0]:
-        pos = pg.mouse.get_pos()
-        if currentTime - lastClickTime > debounceTime:
-            lastClickTime = currentTime
-            solver.addParticle(pos, radius)
+        pos = Vector2(*pg.mouse.get_pos())
+        dist = (pos - constraintCenter).length()
+        if dist < constraintRadius - radius:
+            if currentTime - lastClickTime > debounceTime:
+                lastClickTime = currentTime
+                solver.addParticle(pos, radius)
+
+    keys = pg.key.get_pressed()
+    if keys[pg.K_a]:
+        pos = Vector2(*pg.mouse.get_pos())
+        solver.applyAttraction(pos)
 
     fps = clock.get_fps()
     fps_text = f"FPS: {fps:.2f}"
