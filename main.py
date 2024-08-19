@@ -18,7 +18,7 @@ fpsColor = (162, 177, 219)
 font = pg.font.Font(None, 36)
 
 dt = 1 / 60
-radius = 8
+radius = 25
 running = True
 particleCount = 0
 lastClickTime = 0
@@ -58,10 +58,10 @@ while running:
     fps_text = f"FPS: {fps:.2f} Count: {particleCount:2}"
     text_surface = font.render(fps_text, True, fpsColor)
 
-    solver.updateLink(dt)
+    solver.update(dt)
     screen.fill("GRAY")
     screen.blit(text_surface, (10, 10))
-    print(f"{fps} --- {particleCount}")
+    # print(f"{fps} --- {particleCount}")
     renderer.render(solver)
 
     clock.tick(60)

@@ -1,7 +1,9 @@
 import numpy as np
 
+import quadtree
 from link import Link
 from particle import Particle
+from quadtree import Quadtree, Rectangle
 
 
 class Solver:
@@ -18,7 +20,10 @@ class Solver:
         for _ in range(sub_steps):
             self.applyGravity()
             self.applyConstraint()
-            self.solveCollisions()
+            self.bruteCollisions()
+            self.quadTreeCollisions()
+            # self.link()
+            self.fixParticles()
             self.updatePositions(sub_dt)
 
     def updatePositions(self, dt):
@@ -59,41 +64,46 @@ class Solver:
                         self.constraintRadius - particle.radius
                 )
 
-    def updateLink(self, dt):
-        sub_steps = 8
-        sub_dt = float(dt / sub_steps)
-        for _ in range(sub_steps):
-            self.applyGravity()
-            self.link(sub_dt)
-            self.applyConstraint()
-            self.solveCollisions()
-            self.fixParticles()
-            self.updatePositions(sub_dt)
-
     def fixParticles(self):
         for particle in self.fixedParticles:
             particle.position = particle.position_old.copy()
 
-    def solveCollisions(self):
-        allParticles = self.particles + self.fixedParticles
-        for i, p1 in enumerate(allParticles):
-            for p2 in allParticles[i + 1:]:
-                v = p1.position - p2.position
-                dist = np.sqrt(v.dot(v))
-                min_dist = p1.radius + p2.radius
+    def bruteCollisions(self):
+        all_particles = self.particles + self.fixedParticles
+        for i, particle in enumerate(all_particles):
+            self.handle_collisions(all_particles[i + 1:], particle)
 
-                if dist < min_dist:
-                    n = v / dist
-                    delta = 0.375 * (dist - min_dist)
+    def quadTreeCollisions(self):
+        qt = Quadtree(0, Rectangle(0, 0, 1000, 900))
+        qt.clear()
+        for p in self.particles:
+            qt.insert(p)
 
-                    mass_ratio1 = p1.radius / (p1.radius + p2.radius)
-                    mass_ratio2 = p2.radius / (p1.radius + p2.radius)
+        for p in self.particles:
+            neighbours = qt.retrieve(p)
+            self.handle_collisions(neighbours, p)
 
-                    p1.position -= n * mass_ratio1 * delta
-                    p2.position += n * mass_ratio2 * delta
+    @staticmethod
+    def handle_collisions(neighbours: list[Particle], particle: Particle):
+        for neighbour in neighbours:
+            if particle is neighbour:
+                continue
+            v = particle.position - neighbour.position
+            dist = np.sqrt(v.dot(v))
+            min_dist = particle.radius + neighbour.radius
+
+            if dist < min_dist:
+                n = v / dist
+                delta = 0.375 * (dist - min_dist)
+
+                mass_ratio1 = particle.radius / (particle.radius + neighbour.radius)
+                mass_ratio2 = neighbour.radius / (particle.radius + neighbour.radius)
+
+                particle.position -= n * mass_ratio1 * delta
+                neighbour.position += n * mass_ratio2 * delta
 
     def link(self, dt):
-        allParticles = self.fixedParticles + self.particles
-        for i in range(1, len(allParticles)):
-            chain = Link(allParticles[i - 1], allParticles[i])
+        all_particles = self.fixedParticles + self.particles
+        for i in range(1, len(all_particles)):
+            chain = Link(all_particles[i - 1], all_particles[i])
             chain.apply(dt)
