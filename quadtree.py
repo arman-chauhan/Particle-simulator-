@@ -13,7 +13,7 @@ class Rectangle:
 class Quadtree:
     def __init__(self, pLevel: int, pBounds: Rectangle):
         self.bounds: Rectangle = pBounds
-        self.capacity = 1
+        self.capacity = 5
         self.max_level = 100
         self.level: int = pLevel
         self.nodes: list[Quadtree | None] = [None] * 4
@@ -90,12 +90,11 @@ class Quadtree:
                 if index != -1:
                     self.nodes[index].insert(self.objects.pop(i))
 
-    def retrieve(self, p) -> list[Particle]:
-        return_objects = []
+    def retrieve(self, r: [], p: Particle) -> list[Particle]:
 
         index = self.get_index(p)
         if index != -1 and self.nodes[0] is not None:
-            self.nodes[index].retrieve(p)
+            self.nodes[index].retrieve(r, p)
 
-        return_objects.extend(self.objects)
-        return return_objects
+        r.extend(self.objects)
+        return r

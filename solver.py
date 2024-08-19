@@ -23,8 +23,8 @@ class Solver:
             # self.bruteCollisions()
             # self.link()
             self.fixParticles()
-            self.updatePositions(sub_dt)
             self.quadTreeCollisions()
+            self.updatePositions(sub_dt)
 
     def updatePositions(self, dt):
         for particle in self.particles:
@@ -79,8 +79,10 @@ class Solver:
         for p in self.particles:
             qt.insert(p)
 
+        neighbours = []
         for p in self.particles:
-            neighbours = qt.retrieve(p)
+            neighbours.clear()
+            qt.retrieve(neighbours, p)
             self.handle_collisions(neighbours, p)
 
     @staticmethod
