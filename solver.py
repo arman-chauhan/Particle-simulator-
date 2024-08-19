@@ -20,11 +20,11 @@ class Solver:
         for _ in range(sub_steps):
             self.applyGravity()
             self.applyConstraint()
-            self.bruteCollisions()
-            self.quadTreeCollisions()
+            # self.bruteCollisions()
             # self.link()
             self.fixParticles()
             self.updatePositions(sub_dt)
+            self.quadTreeCollisions()
 
     def updatePositions(self, dt):
         for particle in self.particles:
@@ -74,7 +74,7 @@ class Solver:
             self.handle_collisions(all_particles[i + 1:], particle)
 
     def quadTreeCollisions(self):
-        qt = Quadtree(0, Rectangle(0, 0, 1000, 900))
+        qt = Quadtree(0, Rectangle(0, 0, 900, 900))
         qt.clear()
         for p in self.particles:
             qt.insert(p)

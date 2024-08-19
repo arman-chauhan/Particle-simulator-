@@ -13,10 +13,10 @@ class Rectangle:
 class Quadtree:
     def __init__(self, pLevel: int, pBounds: Rectangle):
         self.bounds: Rectangle = pBounds
-        self.capacity = 3
-        self.max_level = 10
+        self.capacity = 1
+        self.max_level = 100
         self.level: int = pLevel
-        self.nodes: list[Quadtree | None] = [None, None, None, None]
+        self.nodes: list[Quadtree | None] = [None] * 4
         self.objects: list[Particle] = []
 
     def clear(self):
@@ -39,48 +39,63 @@ class Quadtree:
         self.nodes[2] = Quadtree(level, Rectangle(x, y + sub_height, sub_width, sub_height))
         self.nodes[3] = Quadtree(level, Rectangle(x + sub_width, y + sub_height, sub_width, sub_height))
 
-    def get_index(self, p: Particle) -> int:
-        horizontal_mid = self.bounds.x + self.bounds.w / 2
-        vertical_mid = self.bounds.y + self.bounds.h / 2
+    def get_index(self, circle):
+        """Determine which quadrant a circle belongs to."""
+        vertical_mid = self.bounds.x + self.bounds.w / 2
+        horizontal_mid = self.bounds.y + self.bounds.h / 2
 
-        x, y = p.position
+        # Circle's center position and radius
+        cx, cy, radius = circle.position[0], circle.position[1], circle.radius
 
-        if x < horizontal_mid:
-            if y < vertical_mid:
-                return 0  # Top-left (NW)
-            else:
-                return 2  # Bottom-left (SW)
-        else:
-            if y < vertical_mid:
-                return 1  # Top-right (NE)
-            else:
-                return 3  # Bottom-right (SE)
+        # Determine the bounds of the circle
+        left = cx - radius
+        right = cx + radius
+        top = cy - radius
+        bottom = cy + radius
+
+        # Check if circle is in top quadrants
+        top_quadrant = bottom <= horizontal_mid
+        # Check if circle is in bottom quadrants
+        bottom_quadrant = top >= horizontal_mid
+
+        # Check if circle is in left quadrants
+        if right <= vertical_mid:
+            if top_quadrant:
+                return 0  # Top-Left
+            elif bottom_quadrant:
+                return 2  # Bottom-Left
+        # Check if circle is in right quadrants
+        elif left >= vertical_mid:
+            if top_quadrant:
+                return 1  # Top-Right
+            elif bottom_quadrant:
+                return 3  # Bottom-Right
+
+        return -1
 
     def insert(self, point: Particle):
         if self.nodes[0] is not None:
             index = self.get_index(point)
             if index != -1:
-                self.objects.append(point)
+                self.nodes[index].insert(point)
                 return
 
         self.objects.append(point)
-
-        if len(self.objects) > self.capacity and self.level < self.max_level:
+        if len(self.objects) > self.capacity:
             if self.nodes[0] is None:
                 self.split()
 
-            for obj in self.objects:
+            for i, obj in enumerate(self.objects):
                 index = self.get_index(obj)
                 if index != -1:
-                    self.nodes[index].insert(obj)
+                    self.nodes[index].insert(self.objects.pop(i))
 
     def retrieve(self, p) -> list[Particle]:
         return_objects = []
 
         index = self.get_index(p)
-        if index != -1 and not (self.nodes[0] is None):
+        if index != -1 and self.nodes[0] is not None:
             self.nodes[index].retrieve(p)
 
         return_objects.extend(self.objects)
-
         return return_objects
