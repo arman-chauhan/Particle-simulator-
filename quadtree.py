@@ -14,7 +14,7 @@ class Quadtree:
     def __init__(self, pLevel: int, pBounds: Rectangle):
         self.bounds: Rectangle = pBounds
         self.capacity = 5
-        self.max_level = 100
+        self.max_level = 10
         self.level: int = pLevel
         self.nodes: list[Quadtree | None] = [None] * 4
         self.objects: list[Particle] = []
@@ -56,7 +56,7 @@ class Quadtree:
         # Check if circle is in top quadrants
         top_quadrant = bottom <= horizontal_mid
         # Check if circle is in bottom quadrants
-        bottom_quadrant = top >= horizontal_mid
+        bottom_quadrant = top > horizontal_mid
 
         # Check if circle is in left quadrants
         if right <= vertical_mid:
@@ -65,7 +65,7 @@ class Quadtree:
             elif bottom_quadrant:
                 return 2  # Bottom-Left
         # Check if circle is in right quadrants
-        elif left >= vertical_mid:
+        elif left > vertical_mid:
             if top_quadrant:
                 return 1  # Top-Right
             elif bottom_quadrant:
@@ -81,7 +81,7 @@ class Quadtree:
                 return
 
         self.objects.append(point)
-        if len(self.objects) > self.capacity:
+        if len(self.objects) >= self.capacity and self.level < self.max_level:
             if self.nodes[0] is None:
                 self.split()
 

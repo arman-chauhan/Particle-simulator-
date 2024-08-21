@@ -1,9 +1,9 @@
 import numpy as np
 
-import quadtree
 from link import Link
 from particle import Particle
 from quadtree import Quadtree, Rectangle
+from scipy.spatial import KDTree
 
 
 class Solver:
@@ -20,10 +20,11 @@ class Solver:
         for _ in range(sub_steps):
             self.applyGravity()
             self.applyConstraint()
-            # self.bruteCollisions()
-            # self.link()
+            # self.link(sub_dt)
             self.fixParticles()
-            self.quadTreeCollisions()
+            # self.bruteCollisions()
+            # self.quadTreeCollisions()
+            self.KDtree()
             self.updatePositions(sub_dt)
 
     def updatePositions(self, dt):
@@ -71,38 +72,53 @@ class Solver:
     def bruteCollisions(self):
         all_particles = self.particles + self.fixedParticles
         for i, particle in enumerate(all_particles):
-            self.handle_collisions(all_particles[i + 1:], particle)
+            for neighbour in all_particles[i + 1:]:
+                self.handle_collisions(neighbour, particle)
 
     def quadTreeCollisions(self):
         qt = Quadtree(0, Rectangle(0, 0, 900, 900))
         qt.clear()
-        for p in self.particles:
+        all_particles = self.particles + self.fixedParticles
+        for p in all_particles:
             qt.insert(p)
 
         neighbours = []
-        for p in self.particles:
+        for p in all_particles:
             neighbours.clear()
             qt.retrieve(neighbours, p)
-            self.handle_collisions(neighbours, p)
+
+            # handle collision
+            for neighbour in neighbours:
+                self.handle_collisions(neighbour, p)
+
+    def KDtree(self):
+        data = np.array([particle.position for particle in self.particles])
+        if data.shape[0] == 0:
+            return
+
+        kd = KDTree(data)
+        pairs = kd.query_pairs(r=20)
+        for (i, j) in pairs:
+            self.handle_collisions(self.particles[i], self.particles[j])
 
     @staticmethod
-    def handle_collisions(neighbours: list[Particle], particle: Particle):
-        for neighbour in neighbours:
-            if particle is neighbour:
-                continue
-            v = particle.position - neighbour.position
-            dist = np.sqrt(v.dot(v))
-            min_dist = particle.radius + neighbour.radius
+    def handle_collisions(neighbour: Particle, particle: Particle):
+        if particle is neighbour:
+            return
 
-            if dist < min_dist:
-                n = v / dist
-                delta = 0.375 * (dist - min_dist)
+        v = particle.position - neighbour.position
+        dist = np.sqrt(v.dot(v))
+        min_dist = particle.radius + neighbour.radius + 4
 
-                mass_ratio1 = particle.radius / (particle.radius + neighbour.radius)
-                mass_ratio2 = neighbour.radius / (particle.radius + neighbour.radius)
+        if dist < min_dist:
+            n = v / dist
+            delta = 0.2 * (dist - min_dist)
 
-                particle.position -= n * mass_ratio1 * delta
-                neighbour.position += n * mass_ratio2 * delta
+            mass_ratio1 = particle.radius / (particle.radius + neighbour.radius)
+            mass_ratio2 = neighbour.radius / (particle.radius + neighbour.radius)
+
+            particle.position -= n * mass_ratio1 * delta
+            neighbour.position += n * mass_ratio2 * delta
 
     def link(self, dt):
         all_particles = self.fixedParticles + self.particles

@@ -18,11 +18,11 @@ fpsColor = (162, 177, 219)
 font = pg.font.Font(None, 36)
 
 dt = 1 / 60
-radius = 25
+radius = 8
 running = True
 particleCount = 0
 lastClickTime = 0
-debounceTime = 0.2
+debounceTime = 0.0
 
 constraintCenter = (Size[0] * 0.5, Size[1] * 0.5)
 constraintRadius = 400
