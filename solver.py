@@ -6,6 +6,7 @@ from quadtree import Quadtree, Rectangle
 from scipy.spatial import KDTree
 
 
+# TODO: change the particles buffer into a matrix  for easier matrix operations
 class Solver:
     def __init__(self, constraintCenter: tuple, constraintRadius: float):
         self.particles: list[Particle] = []
@@ -24,13 +25,14 @@ class Solver:
             self.fixParticles()
             # self.bruteCollisions()
             # self.quadTreeCollisions()
-            self.KDtree()
+            self.KDtreeCollisions()
             self.updatePositions(sub_dt)
 
     def updatePositions(self, dt):
         for particle in self.particles:
             particle.updatePosition(dt)
 
+    # TODO: vectorize gravity addition
     def applyGravity(self):
         for particle in self.particles:
             particle.accelerate(self.gravity)
@@ -91,15 +93,16 @@ class Solver:
             for neighbour in neighbours:
                 self.handle_collisions(neighbour, p)
 
-    def KDtree(self):
-        data = np.array([particle.position for particle in self.particles])
+    def KDtreeCollisions(self):
+        all = (self.particles + self.fixedParticles)
+        data = np.array([particle.position for particle in all])
         if data.shape[0] == 0:
             return
 
         kd = KDTree(data)
-        pairs = kd.query_pairs(r=20)
+        pairs = kd.query_pairs(r=16)
         for (i, j) in pairs:
-            self.handle_collisions(self.particles[i], self.particles[j])
+            self.handle_collisions(all[i], all[j])
 
     @staticmethod
     def handle_collisions(neighbour: Particle, particle: Particle):
@@ -108,11 +111,11 @@ class Solver:
 
         v = particle.position - neighbour.position
         dist = np.sqrt(v.dot(v))
-        min_dist = particle.radius + neighbour.radius + 4
+        min_dist = particle.radius + neighbour.radius
 
         if dist < min_dist:
             n = v / dist
-            delta = 0.2 * (dist - min_dist)
+            delta = 0.375 * (dist - min_dist)
 
             mass_ratio1 = particle.radius / (particle.radius + neighbour.radius)
             mass_ratio2 = neighbour.radius / (particle.radius + neighbour.radius)

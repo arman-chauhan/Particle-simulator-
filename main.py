@@ -22,7 +22,7 @@ radius = 8
 running = True
 particleCount = 0
 lastClickTime = 0
-debounceTime = 0.0
+debounceTime = 0.2
 
 constraintCenter = (Size[0] * 0.5, Size[1] * 0.5)
 constraintRadius = 400
